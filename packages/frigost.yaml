@@ -1,4 +1,20 @@
 # Frigost host control. The smart plug remains powered during normal shutdowns.
+input_boolean:
+  frigost_automatique:
+    name: Frigost - Gestion automatique
+    icon: mdi:server
+
+input_datetime:
+  frigost_heure_demarrage:
+    name: Frigost - Heure de démarrage
+    has_date: false
+    has_time: true
+
+  frigost_heure_arret:
+    name: Frigost - Heure d'arrêt
+    has_date: false
+    has_time: true
+
 rest_command:
   discord_home_assistant:
     url: !secret discord_home_assistant_webhook_url
@@ -213,3 +229,35 @@ script:
                     data:
                       message: "⚠️ L'arrêt de Frigost n'a pas été détecté dans le délai prévu."
         default: []
+
+automation:
+  - alias: Frigost - Démarrage automatique
+    id: frigost_demarrage_automatique
+    mode: single
+    triggers:
+      - trigger: time
+        at: input_datetime.frigost_heure_demarrage
+    conditions:
+      - condition: state
+        entity_id: input_boolean.frigost_automatique
+        state: "on"
+      - condition: template
+        value_template: "{{ not is_state('binary_sensor.frigost_statut', 'on') }}"
+    actions:
+      - action: script.frigost_demarrer
+
+  - alias: Frigost - Arrêt automatique
+    id: frigost_arret_automatique
+    mode: single
+    triggers:
+      - trigger: time
+        at: input_datetime.frigost_heure_arret
+    conditions:
+      - condition: state
+        entity_id: input_boolean.frigost_automatique
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.frigost_statut
+        state: "on"
+    actions:
+      - action: script.frigost_arreter
