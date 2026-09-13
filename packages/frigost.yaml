@@ -117,7 +117,45 @@ script:
     alias: Frigost - Arrêter
     description: Demande un arrêt gracieux à Proxmox.
     mode: single
+    fields:
+      ignorer_backup:
+        name: Ignorer le backup Immich
+        description: Force l'arrêt même si le statut du backup Immich est en cours, indisponible ou inconnu.
+        required: false
+        default: false
+        selector:
+          boolean:
     sequence:
+      - choose:
+          - conditions: "{{ ignorer_backup | default(false) | bool }}"
+            sequence: []
+          - conditions: "{{ states('sensor.immich_backup_status') in ['unknown', 'unavailable'] }}"
+            sequence:
+              - action: script.discord_home_assistant
+                data:
+                  message: "⚠️ Arrêt de Frigost annulé : impossible de vérifier l'état du backup Immich."
+              - stop: "Arrêt annulé : statut du backup Immich indisponible."
+          - conditions: "{{ is_state('sensor.immich_backup_status', 'RUNNING') }}"
+            sequence:
+              - wait_template: "{{ not is_state('sensor.immich_backup_status', 'RUNNING') }}"
+                timeout: "02:00:00"
+                continue_on_timeout: true
+              - choose:
+                  - conditions: "{{ not wait.completed }}"
+                    sequence:
+                      - action: script.discord_home_assistant
+                        data:
+                          message: "⚠️ Arrêt de Frigost annulé : le backup Immich est toujours en cours après 2 heures."
+                      - stop: "Arrêt annulé : backup Immich toujours en cours."
+                  - conditions: >-
+                      {{ states('sensor.immich_backup_status') not in
+                         ['SUCCESS', 'DEGRADED', 'FAILED'] }}
+                    sequence:
+                      - action: script.discord_home_assistant
+                        data:
+                          message: "⚠️ Arrêt de Frigost annulé : impossible de vérifier l'état du backup Immich."
+                      - stop: "Arrêt annulé : statut du backup Immich indisponible."
+                default: []
       - choose:
           - conditions:
               - condition: state
