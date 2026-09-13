@@ -1,0 +1,38 @@
+# Loaded automatically as a Home Assistant package via configuration.yaml.
+mqtt:
+  sensor:
+    - name: Immich Backup Status
+      state_topic: homelab/backup/immich/status
+      value_template: "{{ value_json.status }}"
+      json_attributes_topic: homelab/backup/immich/status
+      unique_id: immich_backup_status
+    - name: Immich Backup OneDrive Free
+      state_topic: homelab/backup/immich/status
+      value_template: "{{ value_json.onedrive_free_bytes }}"
+      unit_of_measurement: B
+      device_class: data_size
+      unique_id: immich_backup_onedrive_free
+    - name: Immich Backup Last Success
+      state_topic: homelab/backup/immich/status
+      value_template: "{{ value_json.last_success }}"
+      device_class: timestamp
+      unique_id: immich_backup_last_success
+    - name: Immich Backup Last Failure
+      state_topic: homelab/backup/immich/status
+      value_template: "{{ value_json.last_failure }}"
+      device_class: timestamp
+      unique_id: immich_backup_last_failure
+    - name: Immich Backup Duration
+      state_topic: homelab/backup/immich/status
+      value_template: "{{ value_json.duration_seconds }}"
+      unit_of_measurement: s
+      unique_id: immich_backup_duration
+    - name: Immich Backup Snapshot
+      state_topic: homelab/backup/immich/status
+      value_template: "{{ value_json.snapshot_id }}"
+      unique_id: immich_backup_snapshot
+    - name: Immich Backup Dump Age
+      state_topic: homelab/backup/immich/status
+      value_template: "{{ value_json.database_dump_age_seconds }}"
+      unit_of_measurement: s
+      unique_id: immich_backup_database_dump_age

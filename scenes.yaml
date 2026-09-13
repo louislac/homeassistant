@@ -1,0 +1,58 @@
+- id: '1774773431058'
+  name: scène chambre Emil - mode jour
+  entities:
+    light.light_emil:
+      min_color_temp_kelvin: 2202
+      max_color_temp_kelvin: 6535
+      supported_color_modes:
+      - color_temp
+      - xy
+      color_mode: color_temp
+      brightness: 200
+      color_temp_kelvin: 2702
+      hs_color:
+      - 28.391
+      - 65.659
+      rgb_color:
+      - 255
+      - 167
+      - 88
+      xy_color:
+      - 0.524
+      - 0.388
+      friendly_name: light_emil
+      supported_features: 32
+      state: 'on'
+  metadata:
+    light.light_emil:
+      entity_only: true
+  icon: mdi:white-balance-sunny
+- id: '1774774283302'
+  name: scène chambre Emil - mode nuit
+  entities:
+    light.light_emil:
+      min_color_temp_kelvin: 2202
+      max_color_temp_kelvin: 6535
+      supported_color_modes:
+      - color_temp
+      - xy
+      color_mode: color_temp
+      brightness: 8
+      color_temp_kelvin: 2702
+      hs_color:
+      - 28.391
+      - 65.659
+      rgb_color:
+      - 255
+      - 167
+      - 88
+      xy_color:
+      - 0.524
+      - 0.388
+      friendly_name: light_emil
+      supported_features: 32
+      state: 'on'
+  metadata:
+    light.light_emil:
+      entity_only: true
+  icon: mdi:moon-waxing-crescent

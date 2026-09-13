@@ -1,0 +1,119 @@
+ikea_kajplats_zigbee_pair_mode:
+  alias: IKEA Kajplats Zigbee pair mode
+  sequence:
+  - repeat:
+      count: 6
+      sequence:
+      - action: switch.turn_off
+        data: {}
+        target:
+          entity_id: switch.telerupteur_entree
+      - delay:
+          seconds: 1
+      - action: switch.turn_on
+        data: {}
+        target:
+          entity_id: switch.telerupteur_entree
+      - delay:
+          seconds: 1
+  - delay:
+      seconds: 10
+    enabled: false
+  - repeat:
+      count: 6
+      sequence:
+      - action: switch.turn_off
+        data: {}
+        target:
+          entity_id: switch.sw_bureau_relay
+      - delay:
+          seconds: 1
+      - action: switch.turn_on
+        target:
+          entity_id:
+          - switch.sw_bureau_relay
+        data: {}
+      - delay:
+          seconds: 1
+    enabled: false
+  description: ''
+lumiere_emil_mode_jour:
+  sequence:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: light.light_emil
+        state: 'on'
+      sequence:
+      - action: scene.turn_on
+        target:
+          entity_id: scene.chambre_emil_mode_jour
+    default:
+    - action: light.turn_on
+      target:
+        entity_id: light.light_emil
+      data:
+        brightness: 8
+    - delay: '00:00:00.2'
+    - action: scene.turn_on
+      target:
+        entity_id: scene.chambre_emil_mode_jour
+  - action: input_select.select_option
+    target:
+      entity_id: input_select.helper_light_emil_mode
+    data:
+      option: jour
+  alias: lumière Emil - mode jour
+  description: ''
+chambre_emil_mode_nuit:
+  sequence:
+  - action: scene.turn_on
+    target:
+      entity_id: scene.chambre_emil_mode_nuit
+    data: {}
+  - action: input_select.select_option
+    target:
+      entity_id: input_select.helper_light_emil_mode
+    data:
+      option: nuit
+  alias: lumière Emil - mode nuit
+  description: ''
+  icon: mdi:lightbulb-night
+lumiere_emil_toggle_jour:
+  sequence:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: light.light_emil
+        state: 'on'
+      - condition: state
+        entity_id: input_select.helper_light_emil_mode
+        state: jour
+      sequence:
+      - action: light.turn_off
+        target:
+          entity_id: light.light_emil
+    default:
+    - action: script.lumiere_emil_mode_jour
+      data: {}
+  alias: 'lumière Emil toggle jour '
+  description: Permets de toggler la lumière d'Emil en on(mode jour) / off
+lumiere_emil_toggle_nuit:
+  sequence:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: light.light_emil
+        state: 'on'
+      - condition: state
+        entity_id: input_select.helper_light_emil_mode
+        state: nuit
+      sequence:
+      - action: light.turn_off
+        target:
+          entity_id: light.light_emil
+    default:
+    - action: script.chambre_emil_mode_nuit
+      data: {}
+  alias: lumière Emil toggle nuit
+  description: Permets de toggler la lumière d'Emil en on(mode nuit) / off

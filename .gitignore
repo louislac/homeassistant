@@ -1,0 +1,40 @@
+# Secrets
+secrets.yaml
+
+# Environment / secrets
+.env
+.env.*
+secrets.yaml.*
+*.pem
+*.key
+*.pfx
+*.p12
+
+# Home Assistant internal state
+.storage/
+.cloud/
+deps/
+
+# Database
+*.db
+*.db-shm
+*.db-wal
+
+# Logs
+*.log
+*.log.*
+
+# Runtime/cache
+__pycache__/
+*.pid
+tts/
+ip_bans.yaml
+known_devices.yaml
+
+# Backups
+.backup/
+backups/
+
+# OS/editor
+.DS_Store
+Thumbs.db

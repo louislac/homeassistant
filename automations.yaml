@@ -1,0 +1,640 @@
+- id: '1774706015073'
+  alias: switch_emil_autom
+  description: Toggle jour/nuit simple pour WAF
+  triggers:
+  - entity_id: sensor.sw_emil_switch_left_press_action_switch_left
+    from: press
+    to: released
+    id: left
+    trigger: state
+  - entity_id: sensor.sw_emil_switch_right_press_action_switch_right
+    from: press
+    to: released
+    id: right
+    trigger: state
+  actions:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: left
+      sequence:
+      - action: script.lumiere_emil_toggle_jour
+        data: {}
+    - conditions:
+      - condition: trigger
+        id: right
+      sequence:
+      - action: script.lumiere_emil_toggle_nuit
+        data: {}
+  mode: single
+- id: '1774706426874'
+  alias: switch_bureau_autom
+  description: Single press → ampoule, Long press → prise bureau
+  triggers:
+  - entity_id: sensor.sw_bureau_switch_press_action_switch
+    from: press
+    to: released
+    id: single
+    trigger: state
+  - entity_id: sensor.sw_bureau_switch_press_action_switch
+    to: long_press
+    id: long
+    trigger: state
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: single
+      sequence:
+      - target:
+          entity_id: light.light_bureau
+        action: light.toggle
+        data: {}
+        enabled: true
+    - conditions:
+      - condition: trigger
+        id: long
+      sequence:
+      - action: switch.toggle
+        data: {}
+        target:
+          entity_id: switch.smart_plug_20072968373619251h5448e1e927f179_outlet
+  mode: single
+- id: '1774709605586'
+  alias: switch_entree_autom
+  description: Télérupteur entrée via MQTT (Zigbee2MQTT)
+  triggers:
+  - topic: zigbee2mqtt/telerupteur_entree/action
+    payload: toggle
+    trigger: mqtt
+  conditions: []
+  actions:
+  - target:
+      entity_id:
+      - light.light_entree
+    action: light.toggle
+    data: {}
+  mode: single
+- id: '1774709886954'
+  alias: switch_chambre_autom
+  description: Single press → ampoule
+  triggers:
+  - entity_id:
+    - sensor.sw_chambre_switch_press_action_switch
+    from:
+    - press
+    to:
+    - released
+    id: single
+    trigger: state
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: single
+      sequence:
+      - action: light.toggle
+        data: {}
+        target:
+          entity_id: light.light_chambre
+  mode: single
+- id: '1774709956216'
+  alias: switch_salon_autom
+  description: automatisation interrupteur salon
+  triggers:
+  - entity_id: sensor.sw_salon_switch_left_press_action_switch_left
+    from: press
+    to: released
+    id: left
+    trigger: state
+  - entity_id: sensor.sw_salon_switch_right_press_action_switch_right
+    from: press
+    to: released
+    id: right
+    trigger: state
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: left
+      sequence:
+      - action: light.toggle
+        data: {}
+        target:
+          entity_id: light.light_cuisine
+    - conditions:
+      - condition: trigger
+        id: right
+      sequence:
+      - action: light.toggle
+        data: {}
+        target:
+          entity_id: light.light_salon
+  mode: single
+- id: '1774710421869'
+  alias: bilrsea terracotta
+  description: ''
+  triggers:
+  - event_type: state_changed
+    id: btn1
+    event_data:
+      entity_id: event.bilresa_terracotta_bouton_1
+    trigger: event
+  - event_type: state_changed
+    id: btn2
+    event_data:
+      entity_id: event.bilresa_terracotta_bouton_2
+    trigger: event
+  conditions: []
+  actions:
+  - variables:
+      event_type: '{{ trigger.event.data.new_state.attributes.event_type }}'
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ trigger.id == ''btn1'' and event_type == ''multi_press_1''
+          }}
+
+          '
+      sequence:
+      - action: light.turn_on
+        data:
+          brightness: '{{ states(''input_number.last_brightness_chambre'') | int(150)
+            }}
+
+            '
+        target:
+          entity_id: light.light_chambre
+    - conditions:
+      - condition: template
+        value_template: '{{ trigger.id == ''btn2'' and event_type == ''multi_press_1''
+          }}
+
+          '
+      sequence:
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.last_brightness_chambre
+        data:
+          value: '{{ state_attr(''light.light_chambre'', ''brightness'') or 150 }}
+
+            '
+      - action: light.turn_off
+        data: {}
+        target:
+          entity_id: light.light_chambre
+    - conditions:
+      - condition: template
+        value_template: '{{ trigger.id == ''btn1'' and event_type == ''long_press''
+          }}
+
+          '
+      sequence:
+      - repeat:
+          while:
+          - condition: template
+            value_template: '{{ true }}'
+          sequence:
+          - action: light.turn_on
+            data:
+              brightness_step: 25
+            target:
+              entity_id: light.light_chambre
+          - delay: '00:00:00.1'
+    - conditions:
+      - condition: template
+        value_template: '{{ trigger.id == ''btn2'' and event_type == ''long_press''
+          }}
+
+          '
+      sequence:
+      - repeat:
+          while:
+          - condition: template
+            value_template: '{{ true }}'
+          sequence:
+          - action: light.turn_on
+            data:
+              brightness_step: -25
+            target:
+              entity_id: light.light_chambre
+          - delay: '00:00:00.1'
+  mode: restart
+- id: '1774710460214'
+  alias: bilresa beige
+  description: ''
+  triggers:
+  - event_type: state_changed
+    id: btn1
+    event_data:
+      entity_id: event.bilresa_beige_bouton_1
+    trigger: event
+  - event_type: state_changed
+    id: btn2
+    event_data:
+      entity_id: event.bilresa_beige_bouton_2
+    trigger: event
+  conditions: []
+  actions:
+  - variables:
+      event_type: '{{ trigger.event.data.new_state.attributes.event_type }}'
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ trigger.id == ''btn1'' and event_type == ''multi_press_1''
+          }}
+
+          '
+      sequence:
+      - action: light.turn_on
+        data:
+          brightness: '{{ states(''input_number.last_brightness_chambre'') | int(150)
+            }}
+
+            '
+        target:
+          entity_id: light.light_chambre
+    - conditions:
+      - condition: template
+        value_template: '{{ trigger.id == ''btn2'' and event_type == ''multi_press_1''
+          }}
+
+          '
+      sequence:
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.last_brightness_chambre
+        data:
+          value: '{{ state_attr(''light.light_chambre'', ''brightness'') or 150 }}
+
+            '
+      - action: light.turn_off
+        data: {}
+        target:
+          entity_id: light.light_chambre
+    - conditions:
+      - condition: template
+        value_template: '{{ trigger.id == ''btn1'' and event_type == ''long_press''
+          }}
+
+          '
+      sequence:
+      - repeat:
+          while:
+          - condition: template
+            value_template: '{{ true }}'
+          sequence:
+          - action: light.turn_on
+            data:
+              brightness_step: 25
+            target:
+              entity_id: light.light_chambre
+          - delay: '00:00:00.1'
+    - conditions:
+      - condition: template
+        value_template: '{{ trigger.id == ''btn2'' and event_type == ''long_press''
+          }}
+
+          '
+      sequence:
+      - repeat:
+          while:
+          - condition: template
+            value_template: '{{ true }}'
+          sequence:
+          - action: light.turn_on
+            data:
+              brightness_step: -25
+            target:
+              entity_id: light.light_chambre
+          - delay: '00:00:00.1'
+  mode: restart
+- id: '1774710596472'
+  alias: bilresa_vert
+  description: ''
+  triggers:
+  - event_type: state_changed
+    id: btn1
+    event_data:
+      entity_id: event.bilresa_vert_bouton_1
+    trigger: event
+  - event_type: state_changed
+    id: btn2
+    event_data:
+      entity_id: event.bilresa_vert_bouton_2
+    trigger: event
+  conditions: []
+  actions:
+  - variables:
+      event_type: '{{ trigger.event.data.new_state.attributes.event_type }}'
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ trigger.id == ''btn1'' and event_type == ''multi_press_1''
+          }}
+
+          '
+      sequence:
+      - action: light.turn_on
+        data:
+          brightness: '{{ states(''input_number.last_brightness_chambre'') | int(150)
+            }}
+
+            '
+        target:
+          entity_id: light.light_chambre
+    - conditions:
+      - condition: template
+        value_template: '{{ trigger.id == ''btn2'' and event_type == ''multi_press_1''
+          }}
+
+          '
+      sequence:
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.last_brightness_chambre
+        data:
+          value: '{{ state_attr(''light.light_chambre'', ''brightness'') or 150 }}
+
+            '
+      - action: light.turn_off
+        data: {}
+        target:
+          entity_id: light.light_chambre
+    - conditions:
+      - condition: template
+        value_template: '{{ trigger.id == ''btn1'' and event_type == ''long_press''
+          }}
+
+          '
+      sequence:
+      - repeat:
+          while:
+          - condition: template
+            value_template: '{{ true }}'
+          sequence:
+          - action: light.turn_on
+            data:
+              brightness_step: 25
+            target:
+              entity_id: light.light_chambre
+          - delay: '00:00:00.1'
+    - conditions:
+      - condition: template
+        value_template: '{{ trigger.id == ''btn2'' and event_type == ''long_press''
+          }}
+
+          '
+      sequence:
+      - repeat:
+          while:
+          - condition: template
+            value_template: '{{ true }}'
+          sequence:
+          - action: light.turn_on
+            data:
+              brightness_step: -25
+            target:
+              entity_id: light.light_chambre
+          - delay: '00:00:00.1'
+  mode: restart
+- id: '1774758823871'
+  alias: Ouverture Volets - Quotidien (Pièce de vie)
+  description: Ouvre le salon au lever du soleil, sauf en période de vacances.
+  triggers:
+  - trigger: sun
+    event: sunrise
+    offset: 01:00:00
+  conditions:
+  - condition: state
+    entity_id: calendar.ha_calendar_ha_vacances
+    state:
+    - 'off'
+  actions:
+  - action: cover.open_cover
+    data: {}
+    target:
+      entity_id: cover.groupe_cover_piece_de_vie
+  mode: single
+- id: '1774761593822'
+  alias: Fermeture Volets - Quotidien
+  description: Ferme tous les volets au coucher du soleil, sauf en période de vacances.
+  triggers:
+  - trigger: sun
+    event: sunset
+    offset: 0:30:00
+  conditions:
+  - condition: state
+    entity_id: calendar.ha_calendar_ha_vacances
+    state:
+    - 'off'
+  actions:
+  - action: cover.close_cover
+    target:
+      entity_id:
+      - cover.cover_bureau
+      - cover.cover_chambre
+      - cover.cover_mimilou
+      - cover.groupe_cover_piece_de_vie
+- id: '1774761654952'
+  alias: Gestion Volets - Vacances (FINAL)
+  description: 'Simulation de présence : ordre aléatoire, délais en minutes et déclencheurs
+    solaires.'
+  triggers:
+  - trigger: sun
+    event: sunrise
+    offset: 00:20:00
+    id: lever
+  - trigger: sun
+    event: sunset
+    offset: -00:20:00
+    id: coucher
+  conditions:
+  - condition: state
+    entity_id: calendar.ha_calendar_ha_vacances
+    state:
+    - 'on'
+  actions:
+  - variables:
+      volets: '{{ [''cover.cover_bureau'', ''cover.cover_chambre'', ''cover.cover_mimilou'',
+        ''cover.groupe_cover_piece_de_vie''] | shuffle }}'
+  - repeat:
+      for_each: '{{ volets }}'
+      sequence:
+      - delay:
+          minutes: '{{ range(1, 4) | random }}'
+      - choose:
+        - conditions:
+          - condition: trigger
+            id: lever
+          sequence:
+          - action: cover.open_cover
+            target:
+              entity_id: '{{ repeat.item }}'
+        - conditions:
+          - condition: trigger
+            id: coucher
+          sequence:
+          - action: cover.close_cover
+            target:
+              entity_id: '{{ repeat.item }}'
+  mode: single
+- id: '1774762034054'
+  alias: Harmony Music
+  description: Automatisation pour allumer harmony en mode musique
+  triggers: []
+  conditions: []
+  actions:
+  - action: select.select_option
+    metadata: {}
+    target:
+      device_id: 55b696b18d8b6822c1a7ed655672d90d
+    data:
+      option: Listen to Music
+  mode: single
+- id: '1774762665171'
+  alias: Harmony TV
+  description: Automatisation pour allumer harmony en mode TV
+  triggers: []
+  conditions: []
+  actions:
+  - action: select.select_option
+    metadata: {}
+    target:
+      device_id: 55b696b18d8b6822c1a7ed655672d90d
+    data:
+      option: TV
+  mode: single
+- id: '1774762695108'
+  alias: Harmony Off
+  description: Automatisation pour éteindre harmony
+  triggers: []
+  conditions: []
+  actions:
+  - action: select.select_option
+    metadata: {}
+    target:
+      device_id: 55b696b18d8b6822c1a7ed655672d90d
+    data:
+      option: power_off
+  mode: single
+- id: '1774888714184'
+  alias: Volet emil quotidien
+  description: ''
+  triggers:
+  - trigger: time
+    at: '19:30:00'
+    weekday:
+    - sat
+    - fri
+    - thu
+    - wed
+    - tue
+    - mon
+    - sun
+  conditions: []
+  actions:
+  - action: cover.close_cover
+    metadata: {}
+    target:
+      device_id: 82b18f4dd7274252857492d44a1ce4d5
+    data: {}
+  mode: single
+- id: '1781211957963'
+  alias: Caméra - Mode privé selon présence
+  description: ''
+  triggers:
+  - entity_id: binary_sensor.presence_maison
+    trigger: state
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.presence_maison
+        state: 'on'
+      sequence:
+      - target:
+          entity_id: switch.g5_flex_mode_prive_2
+        action: switch.turn_on
+        data: {}
+      - action: switch.turn_off
+        metadata: {}
+        target:
+          entity_id: switch.g5_flex_voyant_d_etat
+        data: {}
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.presence_maison
+        state: 'off'
+      sequence:
+      - target:
+          entity_id: switch.g5_flex_mode_prive_2
+        action: switch.turn_off
+        data: {}
+      - action: switch.turn_on
+        metadata: {}
+        target:
+          entity_id: switch.g5_flex_voyant_d_etat
+        data: {}
+  mode: single
+- id: '1787996893352'
+  alias: IKEA BILRESA - Light Controller (v1.5)
+  description: ''
+  use_blueprint:
+    path: SvKRO/ha-blueprint-ikea-bilresa-scrollwheel_en.yaml
+    input:
+      remote_device: 30b5ec7f370d8c78477ced19b8eb2a90
+      input_click_mode_1: action
+      input_click_1:
+      - action: light.toggle
+        metadata: {}
+        target:
+          device_id: fb887d71b6ba681d5139eb51afb0f8b3
+        data: {}
+      input_light_1:
+        device_id: fb887d71b6ba681d5139eb51afb0f8b3
+      input_sens_1: 5
+      input_mode_1: brightness
+      input_click_2:
+      - action: light.toggle
+        metadata: {}
+        target:
+          device_id: 7ef4870c0b7448d2b62a645fb84cb9e8
+        data: {}
+      input_click_3:
+      - action: light.toggle
+        metadata: {}
+        target:
+          device_id: 0c8861e76552f0f3f4c8cf4b50491393
+        data: {}
+      input_light_2:
+        device_id: 7ef4870c0b7448d2b62a645fb84cb9e8
+      input_mode_2: temp_kelvin
+- id: '1788629312647'
+  alias: Zigbee2MQTT - Tuya 4-Button Switch (MQTT Device Trigger) - rdeangel
+  description: ''
+  use_blueprint:
+    path: rdeangel/zigbee2mqtt-tuya-4-button-switch-mqtt-device-trigger_rdeangel.yaml
+    input:
+      zigbee_device: a9851bd4af482e57b016c4b52b257133
+      button_one_short_press:
+      - action: light.toggle
+        metadata: {}
+        target:
+          device_id: 80bdf64a56ea2c8d7e638ac597fbe9d4
+        data: {}
+      - action: light.toggle
+        metadata: {}
+        target:
+          device_id: 21b903ab1454d65d053fd730f4582408
+        data: {}
+      button_four_short_press:
+      - action: switch.toggle
+        metadata: {}
+        target:
+          device_id: bc80b9edbf777c713aa412c4adde92cb
+        data: {}
