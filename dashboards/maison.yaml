@@ -1,0 +1,335 @@
+title: Maison
+
+views:
+  - title: Maison
+    path: maison
+    icon: mdi:home
+    type: sections
+    max_columns: 2
+    dense_section_placement: true
+    badges:
+      - type: entity
+        show_name: true
+        show_state: false
+        show_icon: true
+        entity: person.louis
+        name:
+          type: entity
+      - type: entity
+        show_name: true
+        show_state: false
+        show_icon: true
+        entity: person.julie
+      - type: entity
+        entity: sensor.temperature_maison
+      - type: entity
+        entity: sensor.humidite_maison
+      - type: entity
+        entity: weather.forecast_maison
+        show_name: false
+        show_state: true
+        show_icon: true
+        state_content:
+          - state
+          - temperature
+      - type: entity
+        entity: sensor.immich_backup_status
+        name: Backup Immich
+        icon: phu:immich
+        visibility:
+          - condition: state
+            entity: sensor.immich_backup_status
+            state_not:
+              - SUCCESS
+              - RUNNING
+    sections:
+      - type: grid
+        cards:
+          - type: vertical-stack
+            cards:
+              - type: area
+                area: salon
+                display_type: compact
+                sensor_classes: [temperature, humidity]
+                features:
+                  - type: area-controls
+                    controls:
+                      - light
+                  - type: area-controls
+                    controls:
+                      - entity_id: light.0xc09b9efffe451c5a
+                      - entity_id: light.light_cuisine
+                  - type: area-controls
+                    controls:
+                      - entity_id: light.light_entree
+                      - entity_id: light.light_salon
+                      - entity_id: light.plug_tulipe
+                  - type: area-controls
+                    controls:
+                      - cover-shade
+                tap_action:
+                  action: navigate
+                  navigation_path: /home/areas-salon
+              - type: area
+                area: chambre_emil
+                display_type: compact
+                sensor_classes: [temperature, humidity]
+                features:
+                  - type: area-controls
+                    controls:
+                      - entity_id: light.light_emil_day
+                      - entity_id: light.light_emil_night
+                  - type: area-controls
+                    controls:
+                      - cover-shade
+                tap_action:
+                  action: navigate
+                  navigation_path: /home/areas-chambre_emil
+            grid_options:
+              columns: 6
+          - type: vertical-stack
+            cards:
+              - type: area
+                area: chambre
+                display_type: compact
+                sensor_classes: [temperature, humidity]
+                features:
+                  - type: area-controls
+                    controls:
+                      - entity_id: light.light_chambre
+                  - type: area-controls
+                    controls:
+                      - entity_id: light.chambre_light_chambre_chevet_julie
+                      - entity_id: light.chambre_light_chambre_chevet_louis
+                  - type: area-controls
+                    controls:
+                      - cover-shade
+                tap_action:
+                  action: navigate
+                  navigation_path: /home/areas-chambre
+              - type: area
+                area: bureau
+                display_type: compact
+                sensor_classes: [temperature, humidity]
+                features:
+                  - type: area-controls
+                    controls:
+                      - light
+                  - type: area-controls
+                    controls:
+                      - entity_id: light.light_bureau_julie
+                      - entity_id: switch.smart_plug_20072968373619251h5448e1e927f179_outlet
+                  - type: area-controls
+                    controls:
+                      - cover-shade
+                tap_action:
+                  action: navigate
+                  navigation_path: /home/areas-bureau
+            grid_options:
+              columns: 6
+
+      - type: grid
+        cards:
+          - type: tile
+            entity: cover.groupe_cover_all
+            name: Tous les volets
+            features:
+              - type: cover-open-close
+            grid_options:
+              columns: 6
+          - type: tile
+            entity: vacuum.romo
+            name: Aspirateur
+            features:
+              - type: vacuum-commands
+                commands: [start_pause, stop, return_home]
+            grid_options:
+              columns: 6
+
+      - type: grid
+        cards:
+          - type: tile
+            entity: select.harmony_hub_activites
+            name: Harmony
+            features:
+              - type: select-options
+            grid_options:
+              columns: 6
+          - type: tile
+            entity: media_player.denon_avc_x3700h
+            name: Denon
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: toggle
+            features:
+              - type: media-player-volume-slider
+            grid_options:
+              columns: 6
+
+      - type: grid
+        title: Chauffage
+        visibility:
+          - condition: state
+            entity: climate.thermostat_navilink_connect_chauffage
+            state: heat
+        cards:
+          - type: thermostat
+            entity: climate.thermostat_navilink_connect_chauffage
+            name: Chauffage
+            grid_options:
+              columns: 12
+
+      - type: grid
+        title: Alertes
+        visibility:
+          - condition: or
+            conditions:
+              - condition: state
+                entity: binary_sensor.door_entree_contact
+                state: "on"
+              - condition: state
+                entity: binary_sensor.porte_fenetre_gauche
+                state: "on"
+              - condition: state
+                entity: binary_sensor.window_salon_right_porte
+                state: "on"
+        cards:
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: binary_sensor.door_entree_contact
+                state: "on"
+            card:
+              type: tile
+              entity: binary_sensor.door_entree_contact
+              name: Porte d'entrée ouverte
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: binary_sensor.porte_fenetre_gauche
+                state: "on"
+            card:
+              type: tile
+              entity: binary_sensor.porte_fenetre_gauche
+              name: Porte-fenêtre gauche ouverte
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: binary_sensor.window_salon_right_porte
+                state: "on"
+            card:
+              type: tile
+              entity: binary_sensor.window_salon_right_porte
+              name: Porte-fenêtre droite ouverte
+
+  - title: Système
+    path: systeme
+    icon: mdi:server
+    type: sections
+    max_columns: 2
+    sections:
+      - type: grid
+        title: Frigost
+        cards:
+          - type: tile
+            entity: binary_sensor.frigost_statut
+            name: Frigost
+            grid_options:
+              columns: 6
+          - type: tile
+            entity: sensor.plug_serveur_frigost_power
+            name: Puissance
+            grid_options:
+              columns: 6
+          - type: tile
+            entity: input_boolean.frigost_automatique
+            name: Gestion automatique
+            grid_options:
+              columns: 12
+          - type: tile
+            entity: input_datetime.frigost_heure_demarrage
+            name: Heure de démarrage
+            grid_options:
+              columns: 6
+          - type: tile
+            entity: input_datetime.frigost_heure_arret
+            name: Heure d'arrêt
+            grid_options:
+              columns: 6
+          - type: tile
+            entity: script.frigost_demarrer
+            name: Démarrer
+            tap_action:
+              action: perform-action
+              perform_action: script.turn_on
+              target:
+                entity_id: script.frigost_demarrer
+            grid_options:
+              columns: 4
+          - type: tile
+            entity: script.frigost_redemarrer
+            name: Redémarrer
+            tap_action:
+              action: perform-action
+              perform_action: script.turn_on
+              target:
+                entity_id: script.frigost_redemarrer
+              confirmation:
+                title: Redémarrer Frigost ?
+                text: Le serveur et Apps seront temporairement indisponibles.
+            grid_options:
+              columns: 4
+          - type: tile
+            entity: script.frigost_arreter
+            name: Arrêter
+            tap_action:
+              action: perform-action
+              perform_action: script.turn_on
+              target:
+                entity_id: script.frigost_arreter
+              confirmation:
+                title: Arrêter Frigost ?
+                text: Le backup Immich reste protégé pendant l'arrêt.
+            grid_options:
+              columns: 4
+
+      - type: grid
+        title: Immich
+        cards:
+          - type: tile
+            entity: sensor.immich_backup_status
+            name: Backup
+            icon: phu:immich
+            grid_options:
+              columns: 12
+          - type: tile
+            entity: sensor.immich_backup_last_success
+            name: Dernier succès
+            grid_options:
+              columns: 6
+          - type: tile
+            entity: sensor.immich_backup_duration
+            name: Durée
+            grid_options:
+              columns: 6
+          - type: tile
+            entity: sensor.immich_backup_onedrive_free
+            name: OneDrive libre
+            grid_options:
+              columns: 6
+          - type: tile
+            entity: sensor.immich_backup_dump_age
+            name: Âge du dump
+            grid_options:
+              columns: 6
+          - type: tile
+            entity: sensor.immich_backup_snapshot
+            name: Dernier snapshot
+            grid_options:
+              columns: 12
+          - type: tile
+            entity: sensor.immich_backup_last_failure
+            name: Dernier échec
+            grid_options:
+              columns: 12

@@ -4,6 +4,16 @@ default_config:
 homeassistant:
   packages: !include_dir_named packages
 
+lovelace:
+  dashboards:
+    maison-yaml:
+      mode: yaml
+      filename: dashboards/maison.yaml
+      title: Maison
+      icon: mdi:home
+      show_in_sidebar: true
+      require_admin: false
+
 # Load frontend themes from the themes folder
 frontend:
   themes: !include_dir_merge_named themes
