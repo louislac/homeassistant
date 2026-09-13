@@ -31,6 +31,9 @@ tts/
 ip_bans.yaml
 known_devices.yaml
 
+# Local Home Assistant inventory (may contain runtime tokens)
+.ha-inventory/
+
 # Backups
 .backup/
 backups/

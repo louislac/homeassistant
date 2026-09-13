@@ -1,0 +1,215 @@
+# Frigost host control. The smart plug remains powered during normal shutdowns.
+rest_command:
+  discord_home_assistant:
+    url: !secret discord_home_assistant_webhook_url
+    method: POST
+    headers:
+      content-type: application/json
+    payload: >-
+      {"username":"Home Assistant","avatar_url":{{ avatar_url | tojson }},"content":{{ message | tojson }}}
+
+  kuma_frigost_maintenance_enable:
+    url: http://192.168.1.21:8108/maintenance/enable
+    method: POST
+    timeout: 5
+
+  kuma_frigost_maintenance_disable:
+    url: http://192.168.1.21:8108/maintenance/disable
+    method: POST
+    timeout: 5
+
+script:
+  discord_home_assistant:
+    alias: Discord - Home Assistant
+    mode: parallel
+    fields:
+      message:
+        required: true
+    sequence:
+      - action: rest_command.discord_home_assistant
+        data:
+          message: "{{ message }}"
+          avatar_url: !secret discord_home_assistant_avatar_url
+
+  frigost_demarrer:
+    alias: Frigost - Démarrer
+    description: Démarre Frigost par Wake-on-LAN.
+    mode: single
+    sequence:
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.frigost_statut
+                state: "on"
+            sequence: []
+        default:
+          - choose:
+              - conditions:
+                  - condition: state
+                    entity_id: switch.plug_serveur_frigost
+                    state: "on"
+                sequence:
+                  - action: button.press
+                    target:
+                      entity_id: button.wake_on_lan_frigost
+                  - wait_template: "{{ is_state('binary_sensor.frigost_statut', 'on') }}"
+                    timeout: "00:05:00"
+                    continue_on_timeout: true
+                  - choose:
+                      - conditions: "{{ wait.completed }}"
+                        sequence: []
+                    default:
+                      - action: script.discord_home_assistant
+                        data:
+                          message: "⚠️ Le démarrage de Frigost n'a pas été confirmé dans le délai prévu."
+            default: []
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.frigost_statut
+                state: "on"
+            sequence:
+              - wait_template: "{{ is_state('binary_sensor.apps_statut', 'on') }}"
+                timeout: "00:05:00"
+                continue_on_timeout: true
+              - choose:
+                  - conditions: "{{ wait.completed }}"
+                    sequence:
+                      - action: rest_command.kuma_frigost_maintenance_disable
+                        response_variable: kuma_disable_response
+                        continue_on_error: true
+                      - choose:
+                          - conditions: >-
+                              {{ kuma_disable_response is defined
+                                 and kuma_disable_response is not none
+                                 and kuma_disable_response.get('status', 0) == 200 }}
+                            sequence:
+                              - action: script.discord_home_assistant
+                                data:
+                                  message: "🟢 Frigost a démarré."
+                        default:
+                          - action: script.discord_home_assistant
+                            data:
+                              message: "⚠️ Frigost et Apps sont disponibles, mais la maintenance Uptime Kuma n'a pas pu être désactivée."
+                default:
+                  - action: script.discord_home_assistant
+                    data:
+                      message: "⚠️ Frigost a démarré, mais Apps n'a pas été confirmé dans le délai prévu. La maintenance Uptime Kuma reste active."
+        default: []
+
+  frigost_arreter:
+    alias: Frigost - Arrêter
+    description: Demande un arrêt gracieux à Proxmox.
+    mode: single
+    sequence:
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.frigost_statut
+                state: "on"
+            sequence:
+              - action: rest_command.kuma_frigost_maintenance_enable
+                response_variable: kuma_enable_response
+                continue_on_error: true
+              - choose:
+                  - conditions: >-
+                      {{ kuma_enable_response is not defined
+                         or kuma_enable_response is none
+                         or kuma_enable_response.get('status', 0) != 200 }}
+                    sequence:
+                      - action: script.discord_home_assistant
+                        data:
+                          message: "⚠️ La maintenance Uptime Kuma n'a pas pu être activée avant l'arrêt de Frigost ; l'arrêt Proxmox continue."
+              - action: button.press
+                target:
+                  entity_id: button.frigost_arreter
+              - wait_template: >-
+                  {{ states('binary_sensor.frigost_statut') in ['off', 'unavailable'] }}
+                timeout: "00:05:00"
+                continue_on_timeout: true
+              - choose:
+                  - conditions: "{{ wait.completed }}"
+                    sequence:
+                      - action: script.discord_home_assistant
+                        data:
+                          message: "⚫ Frigost est arrêté."
+                default:
+                  - action: script.discord_home_assistant
+                    data:
+                      message: "⚠️ L'arrêt de Frigost n'a pas été confirmé dans le délai prévu."
+        default: []
+
+  frigost_redemarrer:
+    alias: Frigost - Redémarrer
+    description: Redémarre Frigost par Proxmox.
+    mode: single
+    sequence:
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.frigost_statut
+                state: "on"
+            sequence:
+              - action: rest_command.kuma_frigost_maintenance_enable
+                response_variable: kuma_enable_response
+                continue_on_error: true
+              - choose:
+                  - conditions: >-
+                      {{ kuma_enable_response is not defined
+                         or kuma_enable_response is none
+                         or kuma_enable_response.get('status', 0) != 200 }}
+                    sequence:
+                      - action: script.discord_home_assistant
+                        data:
+                          message: "⚠️ La maintenance Uptime Kuma n'a pas pu être activée avant le redémarrage de Frigost ; le redémarrage Proxmox continue."
+              - action: button.press
+                target:
+                  entity_id: button.frigost_redemarrer
+              - wait_template: >-
+                  {{ states('binary_sensor.frigost_statut') in ['off', 'unavailable'] }}
+                timeout: "00:05:00"
+                continue_on_timeout: true
+              - choose:
+                  - conditions: "{{ wait.completed }}"
+                    sequence:
+                      - wait_template: "{{ is_state('binary_sensor.frigost_statut', 'on') }}"
+                        timeout: "00:05:00"
+                        continue_on_timeout: true
+                      - choose:
+                          - conditions: "{{ wait.completed }}"
+                            sequence:
+                              - wait_template: "{{ is_state('binary_sensor.apps_statut', 'on') }}"
+                                timeout: "00:05:00"
+                                continue_on_timeout: true
+                              - choose:
+                                  - conditions: "{{ wait.completed }}"
+                                    sequence:
+                                      - action: rest_command.kuma_frigost_maintenance_disable
+                                        response_variable: kuma_disable_response
+                                        continue_on_error: true
+                                      - choose:
+                                          - conditions: >-
+                                              {{ kuma_disable_response is defined
+                                                 and kuma_disable_response is not none
+                                                 and kuma_disable_response.get('status', 0) == 200 }}
+                                            sequence:
+                                              - action: script.discord_home_assistant
+                                                data:
+                                                  message: "🔄 Frigost a redémarré."
+                                        default:
+                                          - action: script.discord_home_assistant
+                                            data:
+                                              message: "⚠️ Frigost et Apps sont disponibles, mais la maintenance Uptime Kuma n'a pas pu être désactivée."
+                                default:
+                                  - action: script.discord_home_assistant
+                                    data:
+                                      message: "⚠️ Frigost a redémarré, mais Apps n'a pas été confirmé dans le délai prévu. La maintenance Uptime Kuma reste active."
+                        default:
+                          - action: script.discord_home_assistant
+                            data:
+                              message: "⚠️ Frigost s'est arrêté, mais son retour n'a pas été confirmé dans le délai prévu."
+                default:
+                  - action: script.discord_home_assistant
+                    data:
+                      message: "⚠️ L'arrêt de Frigost n'a pas été détecté dans le délai prévu."
+        default: []
