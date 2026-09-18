@@ -228,6 +228,9 @@ views:
     icon: mdi:server
     type: sections
     max_columns: 2
+    badges:
+      - type: entity
+        entity: sensor.temp_homelab_temperature
     sections:
       - type: grid
         title: Frigost
