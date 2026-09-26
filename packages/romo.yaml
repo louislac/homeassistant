@@ -1,0 +1,236 @@
+# DJI Romo cleaning workflow. Area IDs are resolved at runtime from their names
+# so the native vacuum segment-to-area mappings remain the source of truth.
+script:
+  romo_nettoyage_complet:
+    alias: Romo - Nettoyage complet
+    description: Aspire la maison, puis passe la serpillière dans la cuisine.
+    mode: single
+    max_exceeded: silent
+    sequence:
+      - choose:
+          - conditions: >-
+              {{ is_state('binary_sensor.presence_maison', 'off')
+                 and states('vacuum.romo') in ['docked', 'idle']
+                 and states('sensor.romo_etat_operationnel') not in
+                   ['running', 'paused', 'error', 'seeking_charger']
+                 and is_state('sensor.romo_erreur_de_fonctionnement', 'no_error') }}
+            sequence: []
+        default:
+          - stop: "Nettoyage annulé : présence détectée, Romo est occupé, indisponible ou en erreur."
+
+      - choose:
+          - conditions: >-
+              {{ 'Auto Vac' in (state_attr('select.romo_mode_nettoyage', 'options') or [])
+                 and 'Auto Mop' in (state_attr('select.romo_mode_nettoyage', 'options') or [])
+                 and area_id('Bureau') is not none
+                 and area_id('Chambre Emil') is not none
+                 and area_id('Grande salle de bain') is not none
+                 and area_id('Cuisine') is not none
+                 and area_id('Salon') is not none
+                 and area_id('Petite salle de bain') is not none
+                 and area_id('Couloir') is not none
+                 and area_id('Chambre') is not none }}
+            sequence: []
+        default:
+          - stop: "Nettoyage annulé : une zone Romo ou un mode requis est introuvable."
+
+      - action: select.select_option
+        target:
+          entity_id: select.romo_mode_nettoyage
+        data:
+          option: Auto Vac
+
+      - action: vacuum.clean_area
+        target:
+          entity_id: vacuum.romo
+        data:
+          cleaning_area_id:
+            - "{{ area_id('Bureau') }}"
+            - "{{ area_id('Chambre Emil') }}"
+            - "{{ area_id('Grande salle de bain') }}"
+            - "{{ area_id('Cuisine') }}"
+            - "{{ area_id('Salon') }}"
+            - "{{ area_id('Petite salle de bain') }}"
+            - "{{ area_id('Couloir') }}"
+            - "{{ area_id('Chambre') }}"
+
+      - wait_template: >-
+          {{ is_state('vacuum.romo', 'cleaning')
+             or is_state('sensor.romo_etat_operationnel', 'running')
+             or is_state('vacuum.romo', 'error')
+             or is_state('sensor.romo_etat_operationnel', 'error')
+             or not is_state('sensor.romo_erreur_de_fonctionnement', 'no_error') }}
+        timeout: "00:02:00"
+        continue_on_timeout: true
+
+      - choose:
+          - conditions: >-
+              {{ is_state('vacuum.romo', 'error')
+                 or is_state('sensor.romo_etat_operationnel', 'error')
+                 or not is_state('sensor.romo_erreur_de_fonctionnement', 'no_error') }}
+            sequence:
+              - stop: "Nettoyage arrêté : Romo a signalé une erreur pendant l'aspiration."
+          - conditions: "{{ not wait.completed }}"
+            sequence:
+              - stop: "Nettoyage arrêté : l'aspiration n'a pas démarré dans les 2 minutes."
+        default: []
+
+      - wait_template: >-
+          {{ is_state('vacuum.romo', 'error')
+             or is_state('sensor.romo_etat_operationnel', 'error')
+             or not is_state('sensor.romo_erreur_de_fonctionnement', 'no_error')
+             or (
+               states('sensor.romo_etat_operationnel') in ['stopped', 'charging', 'docked']
+               and states('vacuum.romo') in ['idle', 'docked']
+             ) }}
+        timeout: "03:00:00"
+        continue_on_timeout: true
+
+      - choose:
+          - conditions: >-
+              {{ is_state('vacuum.romo', 'error')
+                 or is_state('sensor.romo_etat_operationnel', 'error')
+                 or not is_state('sensor.romo_erreur_de_fonctionnement', 'no_error') }}
+            sequence:
+              - stop: "Nettoyage arrêté : Romo a signalé une erreur pendant l'aspiration."
+          - conditions: "{{ not wait.completed }}"
+            sequence:
+              - stop: "Nettoyage arrêté : l'aspiration n'est pas terminée après 3 heures."
+        default: []
+
+      - action: select.select_option
+        target:
+          entity_id: select.romo_mode_nettoyage
+        data:
+          option: Auto Mop
+
+      - action: vacuum.clean_area
+        target:
+          entity_id: vacuum.romo
+        data:
+          cleaning_area_id:
+            - "{{ area_id('Cuisine') }}"
+
+      - wait_template: >-
+          {{ is_state('vacuum.romo', 'cleaning')
+             or is_state('sensor.romo_etat_operationnel', 'running')
+             or is_state('vacuum.romo', 'error')
+             or is_state('sensor.romo_etat_operationnel', 'error')
+             or not is_state('sensor.romo_erreur_de_fonctionnement', 'no_error') }}
+        timeout: "00:02:00"
+        continue_on_timeout: true
+
+      - choose:
+          - conditions: >-
+              {{ is_state('vacuum.romo', 'error')
+                 or is_state('sensor.romo_etat_operationnel', 'error')
+                 or not is_state('sensor.romo_erreur_de_fonctionnement', 'no_error') }}
+            sequence:
+              - stop: "Nettoyage arrêté : Romo a signalé une erreur avant le lavage de la cuisine."
+          - conditions: "{{ not wait.completed }}"
+            sequence:
+              - stop: "Nettoyage arrêté : le lavage de la cuisine n'a pas démarré dans les 2 minutes."
+        default: []
+
+      - wait_template: >-
+          {{ is_state('vacuum.romo', 'error')
+             or is_state('sensor.romo_etat_operationnel', 'error')
+             or not is_state('sensor.romo_erreur_de_fonctionnement', 'no_error')
+             or (
+               states('sensor.romo_etat_operationnel') in ['stopped', 'charging', 'docked']
+               and states('vacuum.romo') in ['idle', 'docked']
+             ) }}
+        timeout: "01:00:00"
+        continue_on_timeout: true
+
+      - choose:
+          - conditions: >-
+              {{ is_state('vacuum.romo', 'error')
+                 or is_state('sensor.romo_etat_operationnel', 'error')
+                 or not is_state('sensor.romo_erreur_de_fonctionnement', 'no_error') }}
+            sequence:
+              - stop: "Nettoyage arrêté : Romo a signalé une erreur pendant le lavage de la cuisine."
+          - conditions: "{{ not wait.completed }}"
+            sequence:
+              - stop: "Nettoyage arrêté : le lavage de la cuisine n'est pas terminé après 1 heure."
+        default: []
+
+automation:
+  - alias: Romo - Nettoyage complet hebdomadaire
+    id: romo_nettoyage_complet_hebdomadaire
+    mode: single
+    triggers:
+      - trigger: time
+        at: "09:00:00"
+        weekday:
+          - mon
+    actions:
+      - action: script.romo_nettoyage_complet
+
+  - alias: Romo - Grande salle de bain quotidienne
+    id: romo_grande_salle_de_bain_quotidienne
+    mode: single
+    triggers:
+      - trigger: time
+        at: "15:00:00"
+    conditions:
+      - condition: template
+        value_template: >-
+          {{ states('vacuum.romo') in ['docked', 'idle']
+             and states('sensor.romo_etat_operationnel') not in
+               ['running', 'paused', 'error', 'seeking_charger']
+             and is_state('sensor.romo_erreur_de_fonctionnement', 'no_error')
+             and area_id('Grande salle de bain') is not none
+             and area_id('Couloir') is not none
+             and 'Auto Vac' in (state_attr('select.romo_mode_nettoyage', 'options') or []) }}
+    actions:
+      - action: select.select_option
+        target:
+          entity_id: select.romo_mode_nettoyage
+        data:
+          option: Auto Vac
+      - action: vacuum.clean_area
+        target:
+          entity_id: vacuum.romo
+        data:
+          cleaning_area_id:
+            - "{{ area_id('Grande salle de bain') }}"
+            - "{{ area_id('Couloir') }}"
+
+  - alias: Romo - Parties communes bihebdomadaire
+    id: romo_parties_communes_bihebdomadaire
+    mode: single
+    triggers:
+      - trigger: time
+        at: "09:00:00"
+        weekday:
+          - wed
+          - fri
+    conditions:
+      - condition: state
+        entity_id: binary_sensor.presence_maison
+        state: "off"
+      - condition: template
+        value_template: >-
+          {{ states('vacuum.romo') in ['docked', 'idle']
+             and states('sensor.romo_etat_operationnel') not in
+               ['running', 'paused', 'error', 'seeking_charger']
+             and is_state('sensor.romo_erreur_de_fonctionnement', 'no_error')
+             and area_id('Cuisine') is not none
+             and area_id('Salon') is not none
+             and area_id('Couloir') is not none
+             and 'Auto Vac' in (state_attr('select.romo_mode_nettoyage', 'options') or []) }}
+    actions:
+      - action: select.select_option
+        target:
+          entity_id: select.romo_mode_nettoyage
+        data:
+          option: Auto Vac
+      - action: vacuum.clean_area
+        target:
+          entity_id: vacuum.romo
+        data:
+          cleaning_area_id:
+            - "{{ area_id('Cuisine') }}"
+            - "{{ area_id('Salon') }}"
+            - "{{ area_id('Couloir') }}"
