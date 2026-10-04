@@ -249,15 +249,30 @@ views:
             entity: input_boolean.frigost_automatique
             name: Gestion automatique
             grid_options:
-              columns: 12
+              columns: 6
+          - type: tile
+            entity: input_boolean.frigost_weekend_automatique
+            name: Week-end automatique
+            grid_options:
+              columns: 6
           - type: tile
             entity: input_datetime.frigost_heure_demarrage
-            name: Heure de démarrage
+            name: Démarrage semaine
             grid_options:
               columns: 6
           - type: tile
             entity: input_datetime.frigost_heure_arret
-            name: Heure d'arrêt
+            name: Arrêt semaine
+            grid_options:
+              columns: 6
+          - type: tile
+            entity: input_datetime.frigost_heure_demarrage_weekend
+            name: Démarrage week-end
+            grid_options:
+              columns: 6
+          - type: tile
+            entity: input_datetime.frigost_heure_arret_weekend
+            name: Arrêt week-end
             grid_options:
               columns: 6
           - type: tile

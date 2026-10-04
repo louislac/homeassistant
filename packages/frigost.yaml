@@ -4,14 +4,28 @@ input_boolean:
     name: Frigost - Gestion automatique
     icon: mdi:server
 
+  frigost_weekend_automatique:
+    name: Frigost - Gestion automatique le week-end
+    icon: mdi:calendar-weekend
+
 input_datetime:
   frigost_heure_demarrage:
-    name: Frigost - Heure de démarrage
+    name: Frigost - Démarrage en semaine
     has_date: false
     has_time: true
 
   frigost_heure_arret:
-    name: Frigost - Heure d'arrêt
+    name: Frigost - Arrêt en semaine
+    has_date: false
+    has_time: true
+
+  frigost_heure_demarrage_weekend:
+    name: Frigost - Démarrage le week-end
+    has_date: false
+    has_time: true
+
+  frigost_heure_arret_weekend:
+    name: Frigost - Arrêt le week-end
     has_date: false
     has_time: true
 
@@ -269,12 +283,18 @@ script:
         default: []
 
 automation:
-  - alias: Frigost - Démarrage automatique
+  - alias: Frigost - Démarrage automatique en semaine
     id: frigost_demarrage_automatique
     mode: single
     triggers:
       - trigger: time
         at: input_datetime.frigost_heure_demarrage
+        weekday:
+          - mon
+          - tue
+          - wed
+          - thu
+          - fri
     conditions:
       - condition: state
         entity_id: input_boolean.frigost_automatique
@@ -284,15 +304,64 @@ automation:
     actions:
       - action: script.frigost_demarrer
 
-  - alias: Frigost - Arrêt automatique
+  - alias: Frigost - Arrêt automatique en semaine
     id: frigost_arret_automatique
     mode: single
     triggers:
       - trigger: time
         at: input_datetime.frigost_heure_arret
+        weekday:
+          - mon
+          - tue
+          - wed
+          - thu
+          - fri
     conditions:
       - condition: state
         entity_id: input_boolean.frigost_automatique
+        state: "on"
+      - condition: state
+        entity_id: binary_sensor.frigost_statut
+        state: "on"
+    actions:
+      - action: script.frigost_arreter
+
+  - alias: Frigost - Démarrage automatique le week-end
+    id: frigost_demarrage_automatique_weekend
+    mode: single
+    triggers:
+      - trigger: time
+        at: input_datetime.frigost_heure_demarrage_weekend
+        weekday:
+          - sat
+          - sun
+    conditions:
+      - condition: state
+        entity_id: input_boolean.frigost_automatique
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frigost_weekend_automatique
+        state: "on"
+      - condition: template
+        value_template: "{{ not is_state('binary_sensor.frigost_statut', 'on') }}"
+    actions:
+      - action: script.frigost_demarrer
+
+  - alias: Frigost - Arrêt automatique le week-end
+    id: frigost_arret_automatique_weekend
+    mode: single
+    triggers:
+      - trigger: time
+        at: input_datetime.frigost_heure_arret_weekend
+        weekday:
+          - sat
+          - sun
+    conditions:
+      - condition: state
+        entity_id: input_boolean.frigost_automatique
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.frigost_weekend_automatique
         state: "on"
       - condition: state
         entity_id: binary_sensor.frigost_statut
