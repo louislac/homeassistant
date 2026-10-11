@@ -174,6 +174,9 @@ automation:
       - trigger: time
         at: "15:00:00"
     conditions:
+      - condition: state
+        entity_id: binary_sensor.presence_maison
+        state: "off"
       - condition: template
         value_template: >-
           {{ states('vacuum.romo') in ['docked', 'idle']
