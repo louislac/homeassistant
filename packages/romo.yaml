@@ -79,10 +79,7 @@ script:
           {{ is_state('vacuum.romo', 'error')
              or is_state('sensor.romo_etat_operationnel', 'error')
              or not is_state('sensor.romo_erreur_de_fonctionnement', 'no_error')
-             or (
-               states('sensor.romo_etat_operationnel') in ['stopped', 'charging', 'docked']
-               and states('vacuum.romo') in ['idle', 'docked']
-             ) }}
+             or is_state('vacuum.romo', 'docked') }}
         timeout: "03:00:00"
         continue_on_timeout: true
 
@@ -97,6 +94,8 @@ script:
             sequence:
               - stop: "Nettoyage arrêté : l'aspiration n'est pas terminée après 3 heures."
         default: []
+
+      - delay: "00:02:00"
 
       - action: select.select_option
         target:
@@ -136,10 +135,7 @@ script:
           {{ is_state('vacuum.romo', 'error')
              or is_state('sensor.romo_etat_operationnel', 'error')
              or not is_state('sensor.romo_erreur_de_fonctionnement', 'no_error')
-             or (
-               states('sensor.romo_etat_operationnel') in ['stopped', 'charging', 'docked']
-               and states('vacuum.romo') in ['idle', 'docked']
-             ) }}
+             or is_state('vacuum.romo', 'docked') }}
         timeout: "01:00:00"
         continue_on_timeout: true
 
