@@ -127,7 +127,11 @@ $plan = foreach ($source in $sources | Sort-Object FullName -Unique) {
     $baselineHash = if ($state.ContainsKey($relative)) { $state[$relative].remote_sha256 } else { $null }
 
     $action = 'copy'
-    $reason = 'nouveau fichier distant'
+    $reason = if ($destinationExists) {
+        'source Git modifiee depuis la derniere reference'
+    } else {
+        'nouveau fichier distant'
+    }
     if ($destinationExists -and $destinationHash -eq $sourceHash) {
         $action = 'skip'
         $reason = 'deja identique'
@@ -150,7 +154,7 @@ $plan = foreach ($source in $sources | Sort-Object FullName -Unique) {
     }
 }
 
-$plan | Select-Object RelativePath, Action, Reason, SourceHash, DestinationHash | Format-Table -AutoSize
+$plan | Select-Object RelativePath, Destination, Action, Reason, SourceHash, DestinationHash | Format-Table -AutoSize
 $conflicts = @($plan | Where-Object Action -eq 'conflict')
 if ($conflicts.Count -gt 0) {
     throw "Deploiement bloque : $($conflicts.Count) conflit(s) distant(s). Reconciliez-les dans Git avant de reessayer."

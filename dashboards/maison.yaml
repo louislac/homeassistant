@@ -351,3 +351,163 @@ views:
             name: Dernier échec
             grid_options:
               columns: 12
+
+  - title: Chauffage
+    path: chauffage
+    icon: mdi:radiator
+    type: sections
+    max_columns: 2
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Thermostat principal
+            icon: mdi:thermostat
+          - type: thermostat
+            entity: climate.thermostat_navilink_connect_chauffage
+            name: Salon
+            grid_options:
+              columns: 12
+              rows: 5
+          - type: tile
+            entity: sensor.thermostat_navilink_connect_duree_delegation_restante_z1
+            name: Dérogation restante
+            icon: mdi:clock-outline
+            visibility:
+              - condition: state
+                entity: climate.thermostat_navilink_connect_chauffage
+                attribute: preset_mode
+                state: override
+            grid_options:
+              columns: 6
+          - type: button
+            name: Reprendre la programmation
+            icon: mdi:calendar-sync
+            show_state: false
+            tap_action:
+              action: perform-action
+              perform_action: climate.set_preset_mode
+              target:
+                entity_id: climate.thermostat_navilink_connect_chauffage
+              data:
+                preset_mode: prog
+              confirmation:
+                title: Reprendre la programmation ?
+                text: La dérogation temporaire en cours sera arrêtée.
+            grid_options:
+              columns: 6
+          - type: tile
+            entity: number.thermostat_navilink_connect_duree_delegation_z1
+            name: Durée de dérogation
+            features:
+              - type: numeric-input
+                style: buttons
+            grid_options:
+              columns: 12
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: Programmation hebdomadaire
+            icon: mdi:calendar-week
+          - type: markdown
+            content: >-
+              La programmation native est affichée ci-dessous. Son édition depuis
+              Home Assistant n'est pas disponible avec Cozytouch 1.4.0 ; les
+              horaires ne sont pas modifiés par cette vue.
+            grid_options:
+              columns: 12
+          - type: entities
+            title: Programme Zone 1
+            show_header_toggle: false
+            entities:
+              - entity: sensor.thermostat_navilink_connect_prog_01_lun_z1
+                name: Lundi
+              - entity: sensor.thermostat_navilink_connect_prog_02_mar_z1
+                name: Mardi
+              - entity: sensor.thermostat_navilink_connect_prog_03_mer_z1
+                name: Mercredi
+              - entity: sensor.thermostat_navilink_connect_prog_04_jeu_z1
+                name: Jeudi
+              - entity: sensor.thermostat_navilink_connect_prog_05_ven_z1
+                name: Vendredi
+              - entity: sensor.thermostat_navilink_connect_prog_06_sam_z1
+                name: Samedi
+              - entity: sensor.thermostat_navilink_connect_prog_07_dim_z1
+                name: Dimanche
+            grid_options:
+              columns: 12
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: Chaudière
+            icon: mdi:fire
+          - type: tile
+            entity: sensor.thermostat_navilink_connect_flamme
+            name: Flamme
+            grid_options:
+              columns: 6
+          - type: tile
+            entity: binary_sensor.thermostat_navilink_connect_cozytouch
+            name: Connexion Cozytouch
+            grid_options:
+              columns: 6
+          - type: tile
+            entity: sensor.thermostat_navilink_connect_temperature_chaudiere
+            name: Température chaudière
+            grid_options:
+              columns: 6
+          - type: tile
+            entity: sensor.unknown_product_62_temperature_ecs
+            name: Température ECS
+            grid_options:
+              columns: 6
+          - type: tile
+            entity: sensor.unknown_product_62_pression_eau
+            name: Pression circuit
+            grid_options:
+              columns: 6
+          - type: tile
+            entity: sensor.thermostat_navilink_connect_pompe_ecs
+            name: Pompe ECS
+            grid_options:
+              columns: 6
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: Consommation et suivi
+            icon: mdi:chart-line
+          - type: tile
+            entity: sensor.unknown_product_62_consommation_ch
+            name: Chauffage
+            grid_options:
+              columns: 6
+          - type: tile
+            entity: sensor.unknown_product_62_consommation_ecs
+            name: Eau chaude sanitaire
+            grid_options:
+              columns: 6
+          - type: history-graph
+            title: Température et consigne
+            hours_to_show: 24
+            entities:
+              - entity: sensor.thermostat_navilink_connect_temperature_thermostat_z1
+                name: Ambiante
+              - entity: number.thermostat_navilink_connect_temperature_consigne
+                name: Consigne
+            grid_options:
+              columns: 12
+              rows: 4
+          - type: history-graph
+            title: Fonctionnement
+            hours_to_show: 24
+            entities:
+              - entity: sensor.thermostat_navilink_connect_flamme
+                name: Flamme
+              - entity: binary_sensor.thermostat_navilink_connect_cozytouch
+                name: Connexion
+            grid_options:
+              columns: 12
+              rows: 4
