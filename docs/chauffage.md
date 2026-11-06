@@ -12,20 +12,13 @@ programmation, Cozytouch traite ce changement comme une dérogation temporaire.
 La vue affiche la durée restante et propose un bouton confirmé pour revenir au
 préréglage `prog`.
 
-Cozytouch installé est en version `1.4.0`. Cette version n'expose ni les
-actions `cozytouch.get_schedule` / `cozytouch.set_schedule`, ni les calendriers
-de programme, ni la ressource `/cozytouch/cozytouch-schedule-card.js`. Les sept
-capteurs de programme Zone 1 sont donc affichés en lecture seule. La carte
-officielle ne doit pas être déclarée tant qu'une version de l'intégration qui
-expose ces fonctionnalités n'est pas installée et démarrée.
+La préversion Cozytouch expose la programmation native pour
+`climate.naia_2_micro_30_chauffage` : les actions `cozytouch.get_schedule` et
+`cozytouch.set_schedule`, le calendrier
+`calendar.naia_2_micro_30_programme_chauffage`, et la carte interactive
+`custom:cozytouch-schedule-card`.
 
-Une version compatible devra fournir :
-
-- les actions `cozytouch.get_schedule` et `cozytouch.set_schedule` ;
-- un calendrier de programme chauffage pour l'entité `climate` ;
-- la ressource JavaScript `/cozytouch/cozytouch-schedule-card.js`, à enregistrer
-  une fois comme module Lovelace.
-
-Après une mise à niveau explicitement approuvée, remplacer la carte de lecture
-seule par la carte officielle documentée par Cozytouch. Ne pas modifier les
-plages existantes pendant cette opération.
+La ressource `/cozytouch/cozytouch-schedule-card.js` est enregistrée dans les
+ressources Lovelace en mode Storage. Elle est déployée avec l'API Home Assistant,
+pas par copie SMB. La carte modifie seulement la programmation native quand son
+bouton Save est utilisé ; son installation ne modifie aucune plage existante.

@@ -171,11 +171,11 @@ views:
         title: Chauffage
         visibility:
           - condition: state
-            entity: climate.thermostat_navilink_connect_chauffage
+            entity: climate.naia_2_micro_30_chauffage
             state: heat
         cards:
           - type: thermostat
-            entity: climate.thermostat_navilink_connect_chauffage
+            entity: climate.naia_2_micro_30_chauffage
             name: Chauffage
             grid_options:
               columns: 12
@@ -364,18 +364,18 @@ views:
             heading: Thermostat principal
             icon: mdi:thermostat
           - type: thermostat
-            entity: climate.thermostat_navilink_connect_chauffage
+            entity: climate.naia_2_micro_30_chauffage
             name: Salon
             grid_options:
               columns: 12
               rows: 5
           - type: tile
-            entity: sensor.thermostat_navilink_connect_duree_delegation_restante_z1
+            entity: sensor.naia_2_micro_30_derogation_temps_restant_z1
             name: Dérogation restante
             icon: mdi:clock-outline
             visibility:
               - condition: state
-                entity: climate.thermostat_navilink_connect_chauffage
+                entity: climate.naia_2_micro_30_chauffage
                 attribute: preset_mode
                 state: override
             grid_options:
@@ -388,7 +388,7 @@ views:
               action: perform-action
               perform_action: climate.set_preset_mode
               target:
-                entity_id: climate.thermostat_navilink_connect_chauffage
+                entity_id: climate.naia_2_micro_30_chauffage
               data:
                 preset_mode: prog
               confirmation:
@@ -397,11 +397,10 @@ views:
             grid_options:
               columns: 6
           - type: tile
-            entity: number.thermostat_navilink_connect_duree_delegation_z1
+            entity: select.naia_2_micro_30_derogation_duree_z1
             name: Durée de dérogation
             features:
-              - type: numeric-input
-                style: buttons
+              - type: select-options
             grid_options:
               columns: 12
 
@@ -410,31 +409,10 @@ views:
           - type: heading
             heading: Programmation hebdomadaire
             icon: mdi:calendar-week
-          - type: markdown
-            content: >-
-              La programmation native est affichée ci-dessous. Son édition depuis
-              Home Assistant n'est pas disponible avec Cozytouch 1.4.0 ; les
-              horaires ne sont pas modifiés par cette vue.
-            grid_options:
-              columns: 12
-          - type: entities
-            title: Programme Zone 1
-            show_header_toggle: false
-            entities:
-              - entity: sensor.thermostat_navilink_connect_prog_01_lun_z1
-                name: Lundi
-              - entity: sensor.thermostat_navilink_connect_prog_02_mar_z1
-                name: Mardi
-              - entity: sensor.thermostat_navilink_connect_prog_03_mer_z1
-                name: Mercredi
-              - entity: sensor.thermostat_navilink_connect_prog_04_jeu_z1
-                name: Jeudi
-              - entity: sensor.thermostat_navilink_connect_prog_05_ven_z1
-                name: Vendredi
-              - entity: sensor.thermostat_navilink_connect_prog_06_sam_z1
-                name: Samedi
-              - entity: sensor.thermostat_navilink_connect_prog_07_dim_z1
-                name: Dimanche
+          - type: custom:cozytouch-schedule-card
+            entity: climate.naia_2_micro_30_chauffage
+            program: heating
+            title: Programmation du chauffage
             grid_options:
               columns: 12
 
@@ -443,36 +421,44 @@ views:
           - type: heading
             heading: Chaudière
             icon: mdi:fire
-          - type: tile
-            entity: sensor.thermostat_navilink_connect_flamme
-            name: Flamme
+          - type: entities
+            entities:
+              - type: attribute
+                entity: climate.naia_2_micro_30_chauffage
+                attribute: hvac_action
+                name: Demande de chauffage
             grid_options:
               columns: 6
           - type: tile
-            entity: binary_sensor.thermostat_navilink_connect_cozytouch
+            entity: binary_sensor.naia_2_micro_30_cozytouch
             name: Connexion Cozytouch
             grid_options:
               columns: 6
           - type: tile
-            entity: sensor.thermostat_navilink_connect_temperature_chaudiere
+            entity: sensor.naia_2_micro_30_temperature_chaudiere
             name: Température chaudière
             grid_options:
               columns: 6
           - type: tile
-            entity: sensor.unknown_product_62_temperature_ecs
+            entity: sensor.naia_2_micro_30_temperature_eau_chaude
             name: Température ECS
             grid_options:
               columns: 6
           - type: tile
-            entity: sensor.unknown_product_62_pression_eau
+            entity: sensor.naia_2_micro_30_pression_eau
             name: Pression circuit
             grid_options:
               columns: 6
           - type: tile
-            entity: sensor.thermostat_navilink_connect_pompe_ecs
+            entity: sensor.naia_2_micro_30_pompe_eau_chaude
             name: Pompe ECS
             grid_options:
               columns: 6
+          - type: tile
+            entity: sensor.naia_2_micro_30_code_erreur_maison
+            name: Diagnostic chaudière
+            grid_options:
+              columns: 12
 
       - type: grid
         cards:
@@ -480,12 +466,12 @@ views:
             heading: Consommation et suivi
             icon: mdi:chart-line
           - type: tile
-            entity: sensor.unknown_product_62_consommation_ch
+            entity: sensor.naia_2_micro_30_consommation_ch
             name: Chauffage
             grid_options:
               columns: 6
           - type: tile
-            entity: sensor.unknown_product_62_consommation_ecs
+            entity: sensor.naia_2_micro_30_consommation_eau_chaude
             name: Eau chaude sanitaire
             grid_options:
               columns: 6
@@ -493,9 +479,9 @@ views:
             title: Température et consigne
             hours_to_show: 24
             entities:
-              - entity: sensor.thermostat_navilink_connect_temperature_thermostat_z1
+              - entity: sensor.naia_2_micro_30_temperature_thermostat_z1
                 name: Ambiante
-              - entity: number.thermostat_navilink_connect_temperature_consigne
+              - entity: number.naia_2_micro_30_temperature_consigne
                 name: Consigne
             grid_options:
               columns: 12
@@ -504,9 +490,11 @@ views:
             title: Fonctionnement
             hours_to_show: 24
             entities:
-              - entity: sensor.thermostat_navilink_connect_flamme
-                name: Flamme
-              - entity: binary_sensor.thermostat_navilink_connect_cozytouch
+              - entity: climate.naia_2_micro_30_chauffage
+                name: Chauffage
+              - entity: sensor.naia_2_micro_30_derogation_en_cours
+                name: Dérogation
+              - entity: binary_sensor.naia_2_micro_30_cozytouch
                 name: Connexion
             grid_options:
               columns: 12
